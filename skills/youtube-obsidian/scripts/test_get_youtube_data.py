@@ -238,11 +238,18 @@ class TestGetVideoMetadata:
             get_video_metadata("test123", "fake_api_key")
 
 
+class MockTranscriptEntry:
+    def __init__(self, text, start, duration):
+        self.text = text
+        self.start = start
+        self.duration = duration
+
+
 class TestGetTranscript:
     def test_fetch_transcript_success(self, mocker):
         mock_transcript_list = [
-            {"text": "Hello", "start": 0.0, "duration": 1.0},
-            {"text": "World", "start": 1.0, "duration": 1.0},
+            MockTranscriptEntry("Hello", 0.0, 1.0),
+            MockTranscriptEntry("World", 1.0, 1.0),
         ]
         mock_api = mocker.patch("get_youtube_data.YouTubeTranscriptApi")
         mock_api.return_value.fetch.return_value = mock_transcript_list
@@ -271,3 +278,69 @@ class TestIntegration:
         assert metadata["title"]
         assert isinstance(metadata["description"], str)
         assert isinstance(metadata["tags"], list)
+
+
+class TestMainFunction:
+    def test_main_no_arguments(self, capsys, mocker):
+        mocker.patch("sys.argv", ["get_youtube_data.py"])
+        with pytest.raises(SystemExit) as exc_info:
+            import get_youtube_data
+
+            get_youtube_data.main()
+        assert exc_info.value.code == 1
+
+    def test_main_missing_api_key(self, capsys, mocker, monkeypatch):
+        mocker.patch(
+            "sys.argv", ["get_youtube_data.py", "https://youtube.com/watch?v=test"]
+        )
+        monkeypatch.delenv("YOUTUBE_API_KEY", raising=False)
+        monkeypatch.setenv("VAULT_PATH", "/tmp")
+        with pytest.raises(SystemExit) as exc_info:
+            import get_youtube_data
+
+            get_youtube_data.main()
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "YOUTUBE_API_KEY environment variable not set" in captured.out
+
+    def test_main_missing_vault_path(self, capsys, mocker, monkeypatch):
+        mocker.patch(
+            "sys.argv", ["get_youtube_data.py", "https://youtube.com/watch?v=test"]
+        )
+        monkeypatch.setenv("YOUTUBE_API_KEY", "fake_key")
+        monkeypatch.delenv("VAULT_PATH", raising=False)
+        monkeypatch.delenv("OBSIDIAN_VAULT_PATH", raising=False)
+        with pytest.raises(SystemExit) as exc_info:
+            import get_youtube_data
+
+            get_youtube_data.main()
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert (
+            "VAULT_PATH or OBSIDIAN_VAULT_PATH environment variable not set"
+            in captured.out
+        )
+
+    def test_main_success_flow(self, mocker, monkeypatch, tmp_path):
+        mocker.patch(
+            "sys.argv", ["get_youtube_data.py", "https://youtube.com/watch?v=test123"]
+        )
+        monkeypatch.setenv("YOUTUBE_API_KEY", "fake_key")
+        monkeypatch.setenv("VAULT_PATH", str(tmp_path))
+
+        mocker.patch("get_youtube_data.extract_video_id", return_value="test123")
+        mocker.patch(
+            "get_youtube_data.get_video_metadata",
+            return_value={"title": "Test", "description": "Desc", "tags": []},
+        )
+        mocker.patch("get_youtube_data.get_transcript", return_value="Transcript text")
+        mocker.patch(
+            "get_youtube_data.create_obsidian_note",
+            return_value=("Note content", "test_note"),
+        )
+
+        import get_youtube_data
+
+        get_youtube_data.main()
+
+        assert (tmp_path / "test_note.md").exists()
