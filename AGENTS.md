@@ -135,6 +135,37 @@ This repository contains customizations for Opencode (https://opencode.ai/). It'
 - Keep tests independent and focused
 - Use descriptive test names
 
+### Skill-Specific Test Commands
+
+#### youtube-obsidian
+```bash
+# Run all tests
+uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py -v
+
+# Run with coverage
+uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py --cov=skills/youtube-obsidian/scripts --cov-report=html
+
+# Run specific test class
+uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py::TestExtractVideoId -v
+
+# Run integration test (requires YOUTUBE_API_KEY)
+export YOUTUBE_API_KEY="your-api-key"
+uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py::TestIntegration -v
+
+# Run eval script
+uv run evals/eval_youtube_obsidian.py
+
+# Capture test data (requires YOUTUBE_API_KEY)
+export YOUTUBE_API_KEY="your-api-key"
+uv run scripts/capture_test_data.py "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Linting
+uv run ruff check skills/youtube-obsidian/scripts/
+
+# Format
+uv run ruff format skills/youtube-obsidian/scripts/
+```
+
 ## Security
 - Never commit API keys, secrets, or credentials
 - Use environment variables for sensitive data

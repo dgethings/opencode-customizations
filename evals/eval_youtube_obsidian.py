@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+import json
 import os
 import sys
-import json
 
 sys.path.insert(
     0,
@@ -15,8 +15,8 @@ sys.path.insert(
 
 from get_youtube_data import (
     extract_video_id,
-    sanitize_filename,
     generate_tags,
+    sanitize_filename,
 )
 
 
@@ -37,11 +37,13 @@ def load_test_cases():
                 "name": "Standard Watch URL",
                 "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "video_id": "dQw4w9WgXcQ",
-                "expected_title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+                "expected_title": (
+                    "Rick Astley - Never Gonna Give You Up (Official Music Video)"
+                ),
             }
         ]
 
-    with open(test_cases_file, "r", encoding="utf-8") as f:
+    with open(test_cases_file, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -99,7 +101,8 @@ def evaluate_filename_sanitization():
             )
 
     print(
-        f"\nFilename Sanitization: {passed}/{total} tests passed ({passed / total * 100:.1f}%)"
+        f"\nFilename Sanitization: {passed}/{total} tests passed "
+        f"({passed / total * 100:.1f}%)"
     )
     return passed, total
 
@@ -165,7 +168,6 @@ def evaluate_test_cases():
         try:
             url = case["url"]
             expected_id = case["video_id"]
-            expected_title = case.get("expected_title", "")
 
             result_id = extract_video_id(url)
 
@@ -174,7 +176,8 @@ def evaluate_test_cases():
                 print(f"✓ PASS: {case['name']} - {url}")
             else:
                 print(
-                    f"✗ FAIL: {case['name']} - Got ID {result_id}, expected {expected_id}"
+                    f"✗ FAIL: {case['name']} - Got ID {result_id}, "
+                    f"expected {expected_id}"
                 )
         except Exception as e:
             print(f"✗ ERROR: {case['name']} - {e}")
@@ -209,7 +212,8 @@ def main():
 
     print("\n" + "=" * 60)
     print(
-        f"Overall Results: {all_passed}/{all_total} tests passed ({all_passed / all_total * 100:.1f}%)"
+        f"Overall Results: {all_passed}/{all_total} tests passed "
+        f"({all_passed / all_total * 100:.1f}%)"
     )
     print("=" * 60)
 

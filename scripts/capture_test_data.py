@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+import json
 import os
 import sys
-import json
 
 sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), "skills", "youtube-obsidian", "scripts")
@@ -17,7 +17,8 @@ try:
     from youtube_transcript_api import YouTubeTranscriptApi
 except ImportError:
     print(
-        "Error: youtube-transcript-api not found. Install with: pip install youtube-transcript-api"
+        "Error: youtube-transcript-api not found. "
+        "Install with: pip install youtube-transcript-api"
     )
     sys.exit(1)
 

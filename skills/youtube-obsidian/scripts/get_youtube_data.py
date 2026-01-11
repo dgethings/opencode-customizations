@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
+import json
 import os
 import re
-import json
 import sys
-from urllib.parse import urlparse, parse_qs
 
 try:
     import requests
@@ -15,7 +14,8 @@ try:
     from youtube_transcript_api import YouTubeTranscriptApi
 except ImportError:
     print(
-        "Error: youtube-transcript-api not found. Install with: pip install youtube-transcript-api"
+        "Error: youtube-transcript-api not found. "
+        "Install with: pip install youtube-transcript-api"
     )
     sys.exit(1)
 
@@ -179,7 +179,8 @@ youtube_url: {url}
 def main():
     if len(sys.argv) < 2:
         print(
-            "Usage: python get_youtube_data.py <youtube_url> [user_summary] [user_comments]"
+            "Usage: python get_youtube_data.py <youtube_url> "
+            "[user_summary] [user_comments]"
         )
         print("Environment variables needed:")
         print("  YOUTUBE_API_KEY - Your YouTube Data API v3 key")

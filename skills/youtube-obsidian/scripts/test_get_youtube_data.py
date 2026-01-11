@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import json
 
 sys.path.insert(
     0,
@@ -13,23 +12,14 @@ sys.path.insert(
     ),
 )
 
-try:
-    import requests_mock
-except ImportError:
-    print(
-        "Error: requests-mock module not found. Install with: pip install requests-mock"
-    )
-    sys.exit(1)
-
 import pytest
-
 from get_youtube_data import (
-    extract_video_id,
-    get_video_metadata,
-    get_transcript,
-    generate_tags,
-    sanitize_filename,
     create_obsidian_note,
+    extract_video_id,
+    generate_tags,
+    get_transcript,
+    get_video_metadata,
+    sanitize_filename,
 )
 
 

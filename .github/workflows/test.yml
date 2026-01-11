@@ -1,0 +1,96 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.11']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv pip install -e ".[test]"
+    
+    - name: Run unit tests with mocked APIs
+      run: |
+        uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py -v --cov=skills/youtube-obsidian/scripts --cov-report=xml --cov-report=term-missing
+    
+    - name: Check coverage threshold
+      run: |
+        uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py --cov=skills/youtube-obsidian/scripts --cov-fail-under=80
+    
+    - name: Run linting
+      run: |
+        uv run ruff check .
+    
+    - name: Run format check
+      run: |
+        uv run ruff format --check .
+    
+    - name: Run eval script
+      run: |
+        uv run evals/eval_youtube_obsidian.py
+    
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  integration:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    strategy:
+      matrix:
+        python-version: ['3.11']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv pip install -e ".[test]"
+    
+    - name: Run integration tests with real API
+      if: env.YOUTUBE_API_KEY != ''
+      env:
+        YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      run: |
+        uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py::TestIntegration -v
+      continue-on-error: true

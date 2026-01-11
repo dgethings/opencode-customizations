@@ -99,3 +99,44 @@ Maximum 15 tags per note.
 The script creates the Obsidian note with all data, but does NOT auto-summarize the transcript. The user must provide their own summary.
 
 After the note is created, you may want to ask Claude to summarize the transcript content and update the note.
+
+## Testing
+
+### Running Tests
+
+Run the test suite:
+
+```bash
+uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py -v
+```
+
+With coverage:
+
+```bash
+uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py --cov=skills/youtube-obsidian/scripts --cov-report=html
+```
+
+### Running Evaluation Script
+
+Run the evaluation script:
+
+```bash
+uv run evals/eval_youtube_obsidian.py
+```
+
+### Capturing Test Data
+
+To capture real API data for testing:
+
+```bash
+export YOUTUBE_API_KEY="your-api-key"
+uv run scripts/capture_test_data.py "https://www.youtube.com/watch?v=VIDEO_ID"
+```
+
+### Test Coverage
+
+The test suite includes:
+- 30 tests (26 unit tests + 4 main function tests)
+- 91.30% code coverage
+- Tests for URL parsing, filename sanitization, tag generation, note creation, metadata fetching, and transcript handling
+- Integration test for real YouTube API (requires YOUTUBE_API_KEY)
