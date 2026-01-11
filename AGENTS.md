@@ -127,13 +127,19 @@ This repository contains customizations for Opencode (https://opencode.ai/). It'
 - Add dependencies to pyproject.toml or package.json using `uv` or `bun`
 
 ## Task Tracking
-- Use 'bd' for task tracking during development
+- Use 'bd' (beads) for task tracking during development
+- For each task, create a new git branch
+- Write tests first, then implement the task
+- Ensure all tests pass
+- Coverage must be over 80% for unit tests
+- For eval tests, accuracy score must be over 90%
 
 ## Testing
 - Write tests for new features using pytest (Python) or bun test (JS/TS)
 - Test file names: `test_*.py` or `*_test.py`
 - Keep tests independent and focused
 - Use descriptive test names
+- Run coverage to ensure 80%+ threshold is met
 
 ### Skill-Specific Test Commands
 
@@ -173,6 +179,7 @@ uv run ruff format skills/youtube-obsidian/scripts/
 - Use parameterized queries for database operations
 
 ## Git Workflow
+- Use conventional commits (e.g., `feat:`, `fix:`, `docs:`, `refactor:`, etc.)
 - Create descriptive commit messages
 - Keep commits atomic and focused
 - Use branch names that describe the feature/fix
