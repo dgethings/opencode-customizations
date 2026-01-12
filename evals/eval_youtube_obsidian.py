@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import glob
 import json
 import logging
 import os
@@ -211,11 +212,14 @@ def execute_agent(
     env = os.environ.copy()
     env["VAULT_PATH"] = vault_path
 
-    # Build subprocess command
-    command = ["uv", "run", "scripts/get_youtube_data.py", video_url, "", ""]
-
     # Get project root for working directory
     project_root = str(Path(__file__).parent.parent.parent)
+
+    # Build subprocess command
+    script_path = os.path.join(
+        project_root, "skills", "youtube-obsidian", "scripts", "get_youtube_data.py"
+    )
+    command = [sys.executable, script_path, video_url, "", ""]
 
     # Execute subprocess
     try:
@@ -254,6 +258,70 @@ def execute_agent(
         error = f"Unexpected error: {e}"
         logging.error(error)
         return False, "", error
+
+
+def check_output_file(
+    vault_path: str, verbose: bool = False
+) -> tuple[bool, str | None]:
+    """Check for obsidian note file creation in VAULT_PATH directory.
+
+    Args:
+        vault_path: Directory path to check for .md files
+        verbose: Enable debug logging
+
+    Returns:
+        Tuple of (file_exists: bool, file_path: str | None)
+    """
+    logging.info(f"Checking for obsidian note in {vault_path}")
+
+    # Use glob to find all .md files in vault_path
+    md_files = glob.glob(os.path.join(vault_path, "*.md"))
+
+    if verbose:
+        logging.debug(f"Found .md files: {md_files}")
+
+    if not md_files:
+        if verbose:
+            logging.debug("No .md files found in vault_path")
+        return False, None
+
+    # Return most recent file based on modification time
+    most_recent_file = max(md_files, key=os.path.getmtime)
+
+    if verbose:
+        logging.debug(f"Most recent file: {most_recent_file}")
+
+    return True, most_recent_file
+
+
+def determine_pass_fail(
+    file_exists: bool, file_path: str | None, vault_path: str
+) -> str:
+    """Determine and display pass/fail status based on output detection.
+
+    Args:
+        file_exists: Whether output file was detected
+        file_path: Path to detected file (if exists)
+        vault_path: Directory path checked for output
+
+    Returns:
+        Pass/fail status: "PASS" or "FAIL"
+    """
+    print("\n" + "=" * 60)
+    print("Output Detection Results")
+    print("=" * 60)
+
+    if file_exists and file_path:
+        print("\nPASS ✓")
+        print(f"Created Note: {file_path}")
+        logging.info(f"Obsidian note detected: {file_path}")
+        return "PASS"
+    else:
+        print("\nFAIL ✗")
+        print("No obsidian note file was created")
+        print(f"Checked directory: {vault_path}")
+        logging.warning("No obsidian note file was created")
+        return "FAIL"
 
 
 def main():
@@ -318,6 +386,13 @@ def main():
         if args.verbose and agent_logs:
             print(f"Logs:\n{agent_logs}")
 
+    # Check for output file (Story 1.3)
+    file_exists, file_path = check_output_file(args.vault_path, args.verbose)
+
+    # Determine and display pass/fail status (Story 1.3)
+    # Note: eval_status will be used in Story 1.4 for error handling
+    eval_status = determine_pass_fail(file_exists, file_path, args.vault_path)
+
     # Run evaluation tests
     print("=" * 60)
     print("YouTube-Obsidian Skill Evaluation")
@@ -347,9 +422,14 @@ def main():
         f"Overall Results: {all_passed}/{all_total} tests passed "
         f"({all_passed / all_total * 100:.1f}%)"
     )
+    print(f"Output Detection Status: {eval_status}")
     print("=" * 60)
 
-    if all_passed == all_total:
+    # Update overall eval status based on output detection (Story 1.3)
+    if eval_status == "FAIL":
+        print(f"\n❌ Eval failed: Output detection status is {eval_status}")
+        return 1
+    elif all_passed == all_total:
         print("\n✅ All evaluation tests passed!")
         return 0
     else:

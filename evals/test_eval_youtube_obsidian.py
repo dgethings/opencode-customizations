@@ -5,6 +5,7 @@ import logging
 import os
 import subprocess
 import sys
+import time
 from unittest.mock import Mock
 
 import pytest
@@ -23,7 +24,7 @@ def test_cli_help_message(monkeypatch):
     assert exc_info.value.code == 0
 
 
-def test_cli_valid_required_arguments(monkeypatch, capsys):
+def test_cli_valid_required_arguments(monkeypatch, capsys, mocker):
     """Test CLI parsing with valid required arguments."""
     monkeypatch.setattr(
         sys,
@@ -34,7 +35,11 @@ def test_cli_valid_required_arguments(monkeypatch, capsys):
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         ],
     )
-    # Don't mock - let evaluation functions run to increase coverage
+    # Mock agent execution and output detection to increase coverage
+    mock_execute = mocker.patch("eval_youtube_obsidian.execute_agent")
+    mock_execute.return_value = (True, "Agent logs", None)
+    mock_check = mocker.patch("eval_youtube_obsidian.check_output_file")
+    mock_check.return_value = (True, "./output/test.md")
     result = eval_youtube_obsidian.main()
 
     # Should exit with success code
@@ -47,7 +52,7 @@ def test_cli_valid_required_arguments(monkeypatch, capsys):
     assert "Overall Results:" in captured.out
 
 
-def test_cli_all_arguments(monkeypatch):
+def test_cli_all_arguments(monkeypatch, mocker):
     """Test CLI parsing with all arguments provided."""
     monkeypatch.setattr(
         sys,
@@ -61,7 +66,11 @@ def test_cli_all_arguments(monkeypatch):
             "--verbose",
         ],
     )
-    # Don't mock - let evaluation functions run to increase coverage
+    # Mock agent execution and output detection to increase coverage
+    mock_execute = mocker.patch("eval_youtube_obsidian.execute_agent")
+    mock_execute.return_value = (True, "Agent logs", None)
+    mock_check = mocker.patch("eval_youtube_obsidian.check_output_file")
+    mock_check.return_value = (True, "/tmp/test/test.md")
     result = eval_youtube_obsidian.main()
 
     # Should exit with success code
@@ -92,7 +101,7 @@ def test_cli_invalid_argument(monkeypatch):
     assert exc_info.value.code == 2  # argparse exits with 2 for unrecognized arguments
 
 
-def test_cli_default_values(monkeypatch):
+def test_cli_default_values(monkeypatch, mocker):
     """Test CLI default values for optional arguments."""
     monkeypatch.setattr(
         sys,
@@ -104,7 +113,11 @@ def test_cli_default_values(monkeypatch):
         ],
     )
 
-    # Don't mock - let evaluation functions run to increase coverage
+    # Mock agent execution and output detection to increase coverage
+    mock_execute = mocker.patch("eval_youtube_obsidian.execute_agent")
+    mock_execute.return_value = (True, "Agent logs", None)
+    mock_check = mocker.patch("eval_youtube_obsidian.check_output_file")
+    mock_check.return_value = (True, "./output/test.md")
     result = eval_youtube_obsidian.main()
 
     # Should exit with success (default values used)
@@ -138,8 +151,8 @@ def test_agent_execution_success(mocker):
     # Verify subprocess was called correctly
     subprocess.run.assert_called_once()
     call_args = subprocess.run.call_args
-    assert call_args[0][0][0] == "uv"
-    assert call_args[0][0][2] == "scripts/get_youtube_data.py"
+    assert call_args[0][0][0] == sys.executable
+    assert "get_youtube_data.py" in call_args[0][0][1]
     assert "VAULT_PATH" in call_args[1]["env"]
 
 
@@ -265,3 +278,164 @@ def test_subprocess_command_structure(mocker):
     assert command[3] == video_url
     assert command[4] == ""  # user_summary (empty for MVP)
     assert command[5] == ""  # user_comments (empty for MVP)
+
+
+# New tests for check_output_file() function (Story 1.3)
+
+
+def test_output_file_detection_success(tmp_path):
+    """Test output file detection when .md file exists."""
+    # Create temporary directory with .md file
+    md_file = tmp_path / "Video Title.md"
+    md_file.write_text("# Test Note")
+
+    # Call check_output_file
+    file_exists, file_path = eval_youtube_obsidian.check_output_file(
+        str(tmp_path), verbose=False
+    )
+
+    # Assertions
+    assert file_exists is True
+    assert file_path is not None
+    assert file_path.endswith("Video Title.md")
+
+
+def test_output_file_detection_no_file(tmp_path):
+    """Test output file detection when no .md files exist."""
+    # Create empty temporary directory
+    empty_dir = tmp_path / "empty"
+    empty_dir.mkdir()
+
+    # Call check_output_file
+    file_exists, file_path = eval_youtube_obsidian.check_output_file(
+        str(empty_dir), verbose=False
+    )
+
+    # Assertions
+    assert file_exists is False
+    assert file_path is None
+
+
+def test_output_file_detection_multiple_files(tmp_path):
+    """Test output file detection with multiple .md files."""
+    # Create temporary directory with multiple .md files
+    old_file = tmp_path / "Old Video.md"
+    old_file.write_text("# Old Note")
+    # Sleep to ensure timestamp difference
+    time.sleep(0.01)
+    new_file = tmp_path / "New Video.md"
+    new_file.write_text("# New Note")
+
+    # Call check_output_file
+    file_exists, file_path = eval_youtube_obsidian.check_output_file(
+        str(tmp_path), verbose=False
+    )
+
+    # Assertions
+    assert file_exists is True
+    assert file_path.endswith("New Video.md")  # Most recent file
+
+
+def test_output_file_detection_verbose_logging(tmp_path, caplog):
+    """Test output file detection with verbose logging."""
+    # Create temporary directory with .md file
+    md_file = tmp_path / "Test Video.md"
+    md_file.write_text("# Test Note")
+
+    # Call check_output_file with verbose=True
+    with caplog.at_level(logging.DEBUG):
+        file_exists, file_path = eval_youtube_obsidian.check_output_file(
+            str(tmp_path), verbose=True
+        )
+
+    # Assertions
+    assert file_exists is True
+    assert file_path is not None
+
+    # Verify DEBUG logs were generated
+    assert any(
+        "Checking for obsidian note" in record.message for record in caplog.records
+    )
+
+
+# Tests for determine_pass_fail() function (Story 1.3)
+
+
+def test_determine_pass_fail_pass(capsys):
+    """Test pass/fail determination when file exists."""
+    # Call determine_pass_fail with file exists
+    status = eval_youtube_obsidian.determine_pass_fail(
+        True, "./output/Video Title.md", "./output/"
+    )
+
+    # Assertions
+    assert status == "PASS"
+    captured = capsys.readouterr()
+    assert "PASS ✓" in captured.out
+    assert "./output/Video Title.md" in captured.out
+
+
+def test_determine_pass_fail_fail(capsys):
+    """Test pass/fail determination when file does not exist."""
+    # Call determine_pass_fail with no file
+    status = eval_youtube_obsidian.determine_pass_fail(False, None, "./output/")
+
+    # Assertions
+    assert status == "FAIL"
+    captured = capsys.readouterr()
+    assert "FAIL ✗" in captured.out
+    assert "No obsidian note file was created" in captured.out
+    assert "./output/" in captured.out
+
+
+def test_determine_pass_fail_verbose_logging(capsys, caplog):
+    """Test pass/fail determination with verbose logging."""
+    # Call determine_pass_fail with file exists and verbose
+    with caplog.at_level(logging.DEBUG):
+        status = eval_youtube_obsidian.determine_pass_fail(
+            True, "./output/Test Video.md", "./output/"
+        )
+
+    # Assertions
+    assert status == "PASS"
+    captured = capsys.readouterr()
+    assert "PASS ✓" in captured.out
+
+
+# Integration test for agent execution + output detection (Story 1.3)
+
+
+def test_integration_agent_execution_output_detection(tmp_path, mocker):
+    """Test integration of agent execution with output detection."""
+    # Mock subprocess.run to simulate agent creating a file
+    mock_process = Mock()
+    mock_process.returncode = 0
+    mock_process.stdout = "Success: Note created"
+    mock_process.stderr = ""
+    mocker.patch("subprocess.run", return_value=mock_process)
+
+    # Simulate agent creating a file in vault path
+    md_file = tmp_path / "Test Video.md"
+    md_file.write_text("# Test Note")
+
+    # Execute agent
+    success, logs, error = eval_youtube_obsidian.execute_agent(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        str(tmp_path),
+        verbose=False,
+    )
+
+    # Check for output file
+    file_exists, file_path = eval_youtube_obsidian.check_output_file(
+        str(tmp_path), verbose=False
+    )
+
+    # Determine pass/fail
+    status = eval_youtube_obsidian.determine_pass_fail(
+        file_exists, file_path, str(tmp_path)
+    )
+
+    # Assertions
+    assert success is True
+    assert file_exists is True
+    assert status == "PASS"

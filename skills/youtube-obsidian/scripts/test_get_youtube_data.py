@@ -334,3 +334,24 @@ class TestMainFunction:
         get_youtube_data.main()
 
         assert (tmp_path / "test_note.md").exists()
+
+    def test_main_exception_handling(self, capsys, mocker, monkeypatch, tmp_path):
+        """Test that main() handles exceptions gracefully (P1)."""
+        mocker.patch(
+            "sys.argv", ["get_youtube_data.py", "https://youtube.com/watch?v=test123"]
+        )
+        monkeypatch.setenv("YOUTUBE_API_KEY", "fake_key")
+        monkeypatch.setenv("VAULT_PATH", str(tmp_path))
+
+        # Mock extract_video_id to raise an exception
+        mocker.patch(
+            "get_youtube_data.extract_video_id", side_effect=Exception("Test error")
+        )
+
+        import get_youtube_data
+
+        with pytest.raises(SystemExit) as exc_info:
+            get_youtube_data.main()
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "Error: Test error" in captured.out

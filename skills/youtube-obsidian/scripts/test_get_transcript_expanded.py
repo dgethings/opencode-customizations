@@ -73,9 +73,9 @@ class TestGetTranscriptEdgeCases:
         mock_api.return_value.fetch.return_value = mock_transcript
 
         result = get_transcript("test123")
-        # Each entry: "Word0 Word0 Word0 Word0 Word0 Word0 Word0 Word0 Word0 Word0 Word0 " (100 chars)
-        # 100 entries = 10000 chars (minus separators)
-        assert len(result) > 9000  # Should be very long
+        # Each entry: "Word0 " * 10 = 60 chars per entry
+        # 100 entries * 60 chars = 6000 chars, plus spaces from join
+        assert len(result) > 6000  # Should be very long
         assert "Word0" in result
         assert "Word99" in result
 
