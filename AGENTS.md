@@ -134,6 +134,16 @@ This repository contains customizations for Opencode (https://opencode.ai/). It'
 - Coverage must be over 80% for unit tests
 - For eval tests, accuracy score must be over 90%
 
+### When Asked to Implement an Issue
+When asked to implement an issue:
+1. Use `bd ready` to show open issues ready to work on
+2. Use `bd list --all` to see all issues (including closed)
+3. Use `bd show <issue-id>` to view issue details
+4. Check the current status and carry on from there
+5. Create a new git branch for the work
+6. Implement following the issue requirements
+7. Close the issue with `bd close <issue-id>` when complete
+
 ## Testing
 - Write tests for new features using pytest (Python) or bun test (JS/TS)
 - Test file names: `test_*.py` or `*_test.py`

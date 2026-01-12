@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
+import argparse
 import json
+import logging
 import os
+import subprocess
 import sys
+from pathlib import Path
 
 sys.path.insert(
     0,
@@ -186,7 +190,135 @@ def evaluate_test_cases():
     return passed, total
 
 
+# Default timeout for agent execution (5 minutes per NFR-2)
+DEFAULT_TIMEOUT = 300
+
+
+def execute_agent(
+    video_url: str, vault_path: str, verbose: bool = False
+) -> tuple[bool, str, str | None]:
+    """Execute youtube-obsidian skill through opencode agent.
+
+    Args:
+        video_url: YouTube video URL to process
+        vault_path: Directory path for obsidian note output
+        verbose: Enable debug logging
+
+    Returns:
+        Tuple of (success: bool, logs: str, error: str | None)
+    """
+    # Prepare environment with VAULT_PATH
+    env = os.environ.copy()
+    env["VAULT_PATH"] = vault_path
+
+    # Build subprocess command
+    command = ["uv", "run", "scripts/get_youtube_data.py", video_url, "", ""]
+
+    # Get project root for working directory
+    project_root = str(Path(__file__).parent.parent.parent)
+
+    # Execute subprocess
+    try:
+        if verbose:
+            logging.debug(f"Subprocess command: {command}")
+            logging.debug(f"VAULT_PATH set to: {vault_path}")
+
+        process = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=DEFAULT_TIMEOUT,
+            env=env,
+            cwd=project_root,
+        )
+
+        if verbose:
+            logging.debug(f"Agent stdout: {process.stdout}")
+            logging.debug(f"Agent stderr: {process.stderr}")
+
+        if process.returncode == 0:
+            logging.info("Agent execution completed successfully")
+            return True, process.stdout, None
+        else:
+            logging.error(
+                f"Agent execution failed with returncode {process.returncode}"
+            )
+            return False, process.stdout, process.stderr
+
+    except subprocess.TimeoutExpired:
+        error = "Execution timeout after 5 minutes"
+        logging.error(error)
+        return False, "", error
+    except Exception as e:
+        error = f"Unexpected error: {e}"
+        logging.error(error)
+        return False, "", error
+
+
 def main():
+    """Run the youtube-obsidian skill evaluation.
+
+    Parses command-line arguments and executes evaluation tests.
+
+    Args:
+        --video-url: YouTube video URL to evaluate (required)
+        --vault-path: Output directory for obsidian notes (default: ./output/)
+        --verbose: Enable debug logging (default: False)
+
+    Returns:
+        int: Exit code (0 for success, 1 for test failures)
+    """
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Evaluate youtube-obsidian skill",
+        epilog=(
+            "Example: uv run evals/eval_youtube_obsidian.py "
+            "--video-url https://www.youtube.com/watch?v=VIDEO_ID"
+        ),
+    )
+    parser.add_argument(
+        "--video-url", type=str, required=True, help="YouTube video URL to evaluate"
+    )
+    parser.add_argument(
+        "--vault-path",
+        type=str,
+        default="./output/",
+        help="Directory path for obsidian note output (default: ./output/)",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Enable DEBUG logging (default: False)",
+    )
+    args = parser.parse_args()
+
+    # Configure logging
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="[%(levelname)s] %(message)s",
+        force=True,  # Override any existing logging configuration
+    )
+
+    # Execute agent
+    logging.info(f"Executing agent with video URL: {args.video_url}")
+    agent_success, agent_logs, agent_error = execute_agent(
+        args.video_url, args.vault_path, args.verbose
+    )
+
+    # Print agent execution results
+    if agent_success:
+        print("\n✅ Agent execution succeeded")
+        if args.verbose:
+            print(f"Logs:\n{agent_logs}")
+    else:
+        print(f"\n❌ Agent execution failed: {agent_error}")
+        if args.verbose and agent_logs:
+            print(f"Logs:\n{agent_logs}")
+
+    # Run evaluation tests
     print("=" * 60)
     print("YouTube-Obsidian Skill Evaluation")
     print("=" * 60)
