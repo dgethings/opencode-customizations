@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 import sys
+import traceback
 from pathlib import Path
 
 sys.path.insert(
@@ -325,18 +326,7 @@ def determine_pass_fail(
 
 
 def main():
-    """Run the youtube-obsidian skill evaluation.
-
-    Parses command-line arguments and executes evaluation tests.
-
-    Args:
-        --video-url: YouTube video URL to evaluate (required)
-        --vault-path: Output directory for obsidian notes (default: ./output/)
-        --verbose: Enable debug logging (default: False)
-
-    Returns:
-        int: Exit code (0 for success, 1 for test failures)
-    """
+    """Main entry point for eval execution with error handling."""
     # Parse command-line arguments
     parser = argparse.ArgumentParser(
         description="Evaluate youtube-obsidian skill",
@@ -362,79 +352,102 @@ def main():
     )
     args = parser.parse_args()
 
-    # Configure logging
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format="[%(levelname)s] %(message)s",
-        force=True,  # Override any existing logging configuration
-    )
+    try:
+        # Configure logging
+        log_level = logging.DEBUG if args.verbose else logging.INFO
+        logging.basicConfig(
+            level=log_level,
+            format="[%(levelname)s] %(message)s",
+            force=True,  # Override any existing logging configuration
+        )
 
-    # Execute agent
-    logging.info(f"Executing agent with video URL: {args.video_url}")
-    agent_success, agent_logs, agent_error = execute_agent(
-        args.video_url, args.vault_path, args.verbose
-    )
+        # Execute agent
+        logging.info(f"Executing agent with video URL: {args.video_url}")
+        agent_success, agent_logs, agent_error = execute_agent(
+            args.video_url, args.vault_path, args.verbose
+        )
 
-    # Print agent execution results
-    if agent_success:
-        print("\n✅ Agent execution succeeded")
+        # Check for agent execution failure
+        if not agent_success:
+            print("Eval System Error: Agent execution failed")
+            if "timeout" in str(agent_error).lower():
+                print("Error Type: subprocess.TimeoutExpired")
+            else:
+                print("Error Type: Exception")
+            print(f"Error Message: {agent_error}")
+            if not args.verbose:
+                print("Run with --verbose for more details")
+            sys.exit(1)
+
+        # Print agent execution results
+        if agent_success:
+            print("\n✅ Agent execution succeeded")
+            if args.verbose:
+                print(f"Logs:\n{agent_logs}")
+
+        # Check for output file (Story 1.3)
+        file_exists, file_path = check_output_file(args.vault_path, args.verbose)
+
+        # Determine and display pass/fail status (Story 1.3)
+        eval_status = determine_pass_fail(file_exists, file_path, args.vault_path)
+
+        # Check for output validation failure
+        if eval_status == "FAIL":
+            print("Validation Error: Obsidian note not created")
+            print(f"Checked directory: {args.vault_path}")
+            if not args.verbose:
+                print("Run with --verbose for more details")
+            sys.exit(1)
+
+        # Run evaluation tests
+        print("=" * 60)
+        print("YouTube-Obsidian Skill Evaluation")
+        print("=" * 60)
+
+        all_passed = 0
+        all_total = 0
+
+        passed, total = evaluate_url_parsing()
+        all_passed += passed
+        all_total += total
+
+        passed, total = evaluate_filename_sanitization()
+        all_passed += passed
+        all_total += total
+
+        passed, total = evaluate_tag_generation()
+        all_passed += passed
+        all_total += total
+
+        passed, total = evaluate_test_cases()
+        all_passed += passed
+        all_total += total
+
+        print("\n" + "=" * 60)
+        print(
+            f"Overall Results: {all_passed}/{all_total} tests passed "
+            f"({all_passed / all_total * 100:.1f}%)"
+        )
+        print(f"Output Detection Status: {eval_status}")
+        print("=" * 60)
+
+        # Success
+        if all_passed == all_total:
+            print("\n✅ All evaluation tests passed!")
+            sys.exit(0)
+        else:
+            print(f"\n❌ {all_total - all_passed} test(s) failed.")
+            sys.exit(1)
+
+    except Exception as e:
+        print("Eval System Error: Unexpected exception during validation")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Message: {e}")
         if args.verbose:
-            print(f"Logs:\n{agent_logs}")
-    else:
-        print(f"\n❌ Agent execution failed: {agent_error}")
-        if args.verbose and agent_logs:
-            print(f"Logs:\n{agent_logs}")
-
-    # Check for output file (Story 1.3)
-    file_exists, file_path = check_output_file(args.vault_path, args.verbose)
-
-    # Determine and display pass/fail status (Story 1.3)
-    # Note: eval_status will be used in Story 1.4 for error handling
-    eval_status = determine_pass_fail(file_exists, file_path, args.vault_path)
-
-    # Run evaluation tests
-    print("=" * 60)
-    print("YouTube-Obsidian Skill Evaluation")
-    print("=" * 60)
-
-    all_passed = 0
-    all_total = 0
-
-    passed, total = evaluate_url_parsing()
-    all_passed += passed
-    all_total += total
-
-    passed, total = evaluate_filename_sanitization()
-    all_passed += passed
-    all_total += total
-
-    passed, total = evaluate_tag_generation()
-    all_passed += passed
-    all_total += total
-
-    passed, total = evaluate_test_cases()
-    all_passed += passed
-    all_total += total
-
-    print("\n" + "=" * 60)
-    print(
-        f"Overall Results: {all_passed}/{all_total} tests passed "
-        f"({all_passed / all_total * 100:.1f}%)"
-    )
-    print(f"Output Detection Status: {eval_status}")
-    print("=" * 60)
-
-    # Update overall eval status based on output detection (Story 1.3)
-    if eval_status == "FAIL":
-        print(f"\n❌ Eval failed: Output detection status is {eval_status}")
-        return 1
-    elif all_passed == all_total:
-        print("\n✅ All evaluation tests passed!")
-        return 0
-    else:
-        print(f"\n❌ {all_total - all_passed} test(s) failed.")
-        return 1
+            traceback.print_exc()
+        else:
+            print("Run with --verbose for more details")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

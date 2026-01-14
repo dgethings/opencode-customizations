@@ -40,10 +40,12 @@ def test_cli_valid_required_arguments(monkeypatch, capsys, mocker):
     mock_execute.return_value = (True, "Agent logs", None)
     mock_check = mocker.patch("eval_youtube_obsidian.check_output_file")
     mock_check.return_value = (True, "./output/test.md")
-    result = eval_youtube_obsidian.main()
+
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
 
     # Should exit with success code
-    assert result == 0
+    assert exc_info.value.code == 0
 
     # Verify output contains expected sections
     captured = capsys.readouterr()
@@ -71,10 +73,12 @@ def test_cli_all_arguments(monkeypatch, mocker):
     mock_execute.return_value = (True, "Agent logs", None)
     mock_check = mocker.patch("eval_youtube_obsidian.check_output_file")
     mock_check.return_value = (True, "/tmp/test/test.md")
-    result = eval_youtube_obsidian.main()
+
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
 
     # Should exit with success code
-    assert result == 0
+    assert exc_info.value.code == 0
 
 
 def test_cli_missing_required_argument(monkeypatch):
@@ -118,10 +122,12 @@ def test_cli_default_values(monkeypatch, mocker):
     mock_execute.return_value = (True, "Agent logs", None)
     mock_check = mocker.patch("eval_youtube_obsidian.check_output_file")
     mock_check.return_value = (True, "./output/test.md")
-    result = eval_youtube_obsidian.main()
+
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
 
     # Should exit with success (default values used)
-    assert result == 0
+    assert exc_info.value.code == 0
 
 
 # New tests for execute_agent() function (Story 1.2)
@@ -272,12 +278,11 @@ def test_subprocess_command_structure(mocker):
     # Verify subprocess command structure
     call_args = subprocess.run.call_args
     command = call_args[0][0]
-    assert command[0] == "uv"
-    assert command[1] == "run"
-    assert command[2] == "scripts/get_youtube_data.py"
-    assert command[3] == video_url
-    assert command[4] == ""  # user_summary (empty for MVP)
-    assert command[5] == ""  # user_comments (empty for MVP)
+    assert command[0] == sys.executable
+    assert "get_youtube_data.py" in command[1]
+    assert command[2] == video_url
+    assert command[3] == ""  # user_summary (empty for MVP)
+    assert command[4] == ""  # user_comments (empty for MVP)
 
 
 # New tests for check_output_file() function (Story 1.3)
@@ -439,3 +444,292 @@ def test_integration_agent_execution_output_detection(tmp_path, mocker):
     assert success is True
     assert file_exists is True
     assert status == "PASS"
+
+
+# Error handling tests (Story 1.4)
+
+
+def test_agent_execution_timeout_error_handling(monkeypatch, mocker, capsys):
+    """Test error handling for agent execution timeout."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        ],
+    )
+
+    # Mock execute_agent to return timeout failure
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent",
+        return_value=(False, "", "Execution timeout after 5 minutes"),
+    )
+
+    # Mock other functions
+    mocker.patch("eval_youtube_obsidian.check_output_file")
+    mocker.patch("eval_youtube_obsidian.determine_pass_fail")
+    mocker.patch("eval_youtube_obsidian.evaluate_url_parsing")
+    mocker.patch("eval_youtube_obsidian.evaluate_filename_sanitization")
+    mocker.patch("eval_youtube_obsidian.evaluate_tag_generation")
+    mocker.patch("eval_youtube_obsidian.evaluate_test_cases")
+
+    # Call main
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
+
+    # Assertions
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Eval System Error: Agent execution failed" in captured.out
+    assert "subprocess.TimeoutExpired" in captured.out
+    assert "Execution timeout after 5 minutes" in captured.out
+    assert "Run with --verbose for more details" in captured.out
+
+
+def test_agent_execution_timeout_with_verbose(monkeypatch, mocker, capsys):
+    """Test agent execution timeout error handling with verbose mode."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--verbose",
+        ],
+    )
+
+    # Mock execute_agent to return timeout failure
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent",
+        return_value=(False, "", "Execution timeout after 5 minutes"),
+    )
+
+    # Mock other functions
+    mocker.patch("eval_youtube_obsidian.check_output_file")
+    mocker.patch("eval_youtube_obsidian.determine_pass_fail")
+    mocker.patch("eval_youtube_obsidian.evaluate_url_parsing")
+    mocker.patch("eval_youtube_obsidian.evaluate_filename_sanitization")
+    mocker.patch("eval_youtube_obsidian.evaluate_tag_generation")
+    mocker.patch("eval_youtube_obsidian.evaluate_test_cases")
+
+    # Call main with verbose
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
+
+    # Assertions
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Eval System Error: Agent execution failed" in captured.out
+    assert "subprocess.TimeoutExpired" in captured.out
+    assert "Execution timeout after 5 minutes" in captured.out
+    # No stack trace since no exception
+
+
+def test_output_validation_failure_error_handling(monkeypatch, mocker, capsys):
+    """Test error handling for output validation failure."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        ],
+    )
+
+    # Mock execute_agent to succeed
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent", return_value=(True, "logs", None)
+    )
+
+    # Mock check_output_file to return failure
+    mocker.patch("eval_youtube_obsidian.check_output_file", return_value=(False, None))
+
+    # Mock determine_pass_fail to return "FAIL"
+    mocker.patch("eval_youtube_obsidian.determine_pass_fail", return_value="FAIL")
+
+    # Mock evaluation functions
+    mocker.patch("eval_youtube_obsidian.evaluate_url_parsing")
+    mocker.patch("eval_youtube_obsidian.evaluate_filename_sanitization")
+    mocker.patch("eval_youtube_obsidian.evaluate_tag_generation")
+    mocker.patch("eval_youtube_obsidian.evaluate_test_cases")
+
+    # Call main
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
+
+    # Assertions
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Validation Error: Obsidian note not created" in captured.out
+    assert "./output/" in captured.out
+    assert "Run with --verbose for more details" in captured.out
+
+
+def test_output_validation_failure_with_verbose(monkeypatch, mocker, capsys):
+    """Test output validation failure error handling with verbose mode."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--verbose",
+        ],
+    )
+
+    # Mock execute_agent to succeed
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent", return_value=(True, "logs", None)
+    )
+
+    # Mock check_output_file to return failure
+    mocker.patch("eval_youtube_obsidian.check_output_file", return_value=(False, None))
+
+    # Mock determine_pass_fail to return "FAIL"
+    mocker.patch("eval_youtube_obsidian.determine_pass_fail", return_value="FAIL")
+
+    # Mock evaluation functions
+    mocker.patch("eval_youtube_obsidian.evaluate_url_parsing")
+    mocker.patch("eval_youtube_obsidian.evaluate_filename_sanitization")
+    mocker.patch("eval_youtube_obsidian.evaluate_tag_generation")
+    mocker.patch("eval_youtube_obsidian.evaluate_test_cases")
+
+    # Call main with verbose
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
+
+    # Assertions
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Validation Error: Obsidian note not created" in captured.out
+    assert "./output/" in captured.out
+    # No stack trace
+
+
+def test_unexpected_exception_error_handling(monkeypatch, mocker, capsys):
+    """Test error handling for unexpected system exception."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        ],
+    )
+
+    # Mock execute_agent to raise unexpected exception
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent",
+        side_effect=ValueError("Unexpected error occurred"),
+    )
+
+    # Call main
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
+
+    # Assertions
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Eval System Error: Unexpected exception during validation" in captured.out
+    assert "ValueError" in captured.out
+    assert "Unexpected error occurred" in captured.out
+    assert "Run with --verbose for more details" in captured.out
+
+
+def test_unexpected_exception_with_verbose(monkeypatch, mocker, capsys):
+    """Test error handling for unexpected exception with verbose mode."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--verbose",
+        ],
+    )
+
+    # Mock execute_agent to raise unexpected exception
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent",
+        side_effect=ValueError("Unexpected error occurred"),
+    )
+
+    # Call main with verbose
+    with pytest.raises(SystemExit) as exc_info:
+        eval_youtube_obsidian.main()
+
+    # Assertions
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Eval System Error: Unexpected exception during validation" in captured.out
+    assert "ValueError" in captured.out
+    assert "Unexpected error occurred" in captured.out
+    assert "Traceback" in captured.err  # Stack trace displayed
+
+
+def test_non_verbose_suggests_verbose_flag(monkeypatch, mocker, capsys):
+    """Test that non-verbose mode suggests enabling --verbose."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        ],
+    )
+
+    # Mock execute_agent to return agent failure
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent", return_value=(False, "", "Some error")
+    )
+
+    # Mock other functions
+    mocker.patch("eval_youtube_obsidian.check_output_file")
+    mocker.patch("eval_youtube_obsidian.determine_pass_fail")
+    mocker.patch("eval_youtube_obsidian.evaluate_url_parsing")
+    mocker.patch("eval_youtube_obsidian.evaluate_filename_sanitization")
+    mocker.patch("eval_youtube_obsidian.evaluate_tag_generation")
+    mocker.patch("eval_youtube_obsidian.evaluate_test_cases")
+
+    # Call main without verbose
+    with pytest.raises(SystemExit):
+        eval_youtube_obsidian.main()
+
+    # Check output suggests verbose
+    captured = capsys.readouterr()
+    assert "Run with --verbose for more details" in captured.out
+
+
+def test_verbose_mode_displays_stack_trace(monkeypatch, mocker, capsys):
+    """Test that verbose mode displays stack trace for unexpected exceptions."""
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "eval_youtube_obsidian.py",
+            "--video-url",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--verbose",
+        ],
+    )
+
+    # Mock execute_agent to raise exception
+    mocker.patch(
+        "eval_youtube_obsidian.execute_agent", side_effect=Exception("Test exception")
+    )
+
+    # Call main with verbose
+    with pytest.raises(SystemExit):
+        eval_youtube_obsidian.main()
+
+    # Check stack trace is displayed
+    captured = capsys.readouterr()
+    assert "Traceback" in captured.err

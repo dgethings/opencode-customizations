@@ -30,7 +30,7 @@ workflow_status:
         required: true
         agent: analyst
         command: /bmad:bmm:workflows:document-project
-        status: required
+        status: /Users/dgethings/git/opencode-customizations/docs/index.md
   phase_1_analysis:
     name: "Analysis (Optional)"
     optional: true
