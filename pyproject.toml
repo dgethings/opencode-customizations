@@ -1,11 +1,10 @@
 [project]
 name = "opencode-customizations"
 version = "0.1.0"
-description = "Add your description here"
+description = "A collection of Opencode agents, skills, tools and commands to customise Opencode's capabilities and behaviour"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "requests>=2.31.0",
     "youtube-transcript-api>=0.6.0",
 ]
 
@@ -15,32 +14,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["skills*"]
-
-[project.optional-dependencies]
-test = [
-    "pytest>=8.0.0",
-    "pytest-mock>=3.12.0",
-    "pytest-cov>=4.0.0",
-    "requests-mock>=1.12.0",
-    "pytest-evals>=0.3.4",
-]
-
-[tool.pytest.ini_options]
-testpaths = ["."]
-python_files = ["test_*.py", "*_test.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "--cov=skills/youtube-obsidian/scripts",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-fail-under=80",
-    "-v",
-]
-
-[tool.coverage.run]
-source = ["skills/youtube-obsidian/scripts"]
-omit = ["*/tests/*", "*/test_*.py"]
 
 [tool.ruff]
 line-length = 88
