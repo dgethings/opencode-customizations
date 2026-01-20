@@ -5,4 +5,11 @@ opencode_customizations.egg-info/SOURCES.txt
 opencode_customizations.egg-info/dependency_links.txt
 opencode_customizations.egg-info/requires.txt
 opencode_customizations.egg-info/top_level.txt
+skills/youtube-obsidian/scripts/conftest.py
 skills/youtube-obsidian/scripts/get_youtube_data.py
+skills/youtube-obsidian/scripts/test_create_obsidian_note_expanded.py
+skills/youtube-obsidian/scripts/test_generate_tags_expanded.py
+skills/youtube-obsidian/scripts/test_get_transcript_expanded.py
+skills/youtube-obsidian/scripts/test_get_video_metadata_expanded.py
+skills/youtube-obsidian/scripts/test_get_youtube_data.py
+skills/youtube-obsidian/scripts/test_helpers.py

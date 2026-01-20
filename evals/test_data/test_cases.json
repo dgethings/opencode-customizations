@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "description": "Test cases for youtube-obsidian skill evaluation",
+  "created_date": "2026-01-17",
+  "test_cases": [
+    {
+      "id": "tc-001",
+      "name": "Standard Watch URL",
+      "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "expected_title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+      "description": "Standard youtube.com/watch?v= format URL",
+      "tags": ["basic", "url-parsing"]
+    },
+    {
+      "id": "tc-002",
+      "name": "Shortened youtu.be URL",
+      "video_url": "https://youtu.be/dQw4w9WgXcQ",
+      "expected_title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+      "description": "Shortened youtu.be format URL",
+      "tags": ["basic", "url-parsing", "shortened-url"]
+    },
+    {
+      "id": "tc-003",
+      "name": "Video with Transcript Available",
+      "video_url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "expected_title": "Me at the zoo",
+      "description": "Public domain video with available transcript",
+      "tags": ["transcript", "public-domain"]
+    },
+    {
+      "id": "tc-004",
+      "name": "Long Form Video",
+      "video_url": "https://www.youtube.com/watch?v=aircAruvnKk",
+      "expected_title": "What is a JPEG? (Deep zoom)",
+      "description": "Longer educational video to test transcript handling",
+      "tags": ["transcript", "long-form"]
+    },
+    {
+      "id": "tc-005",
+      "name": "Multiple Videos Batch Test",
+      "video_url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
+      "expected_title": "Me at the zoo",
+      "description": "Additional public domain video for batch testing",
+      "tags": ["batch", "public-domain"]
+    }
+  ],
+  "metadata": {
+    "total_cases": 5,
+    "public_domain_videos": 3,
+    "transcript_available": 3,
+    "tags_summary": {
+      "basic": 2,
+      "url-parsing": 2,
+      "transcript": 3,
+      "public-domain": 3,
+      "long-form": 1,
+      "batch": 1
+    }
+  }
+}

@@ -60,6 +60,12 @@ This document provides the complete epic and story breakdown for opencode-custom
 - NFR-6: False positive rate (passing agents that should fail) is below 5%
 - NFR-7: False negative rate (failing agents that should pass) is below 5%
 
+**NFR Scope Clarification:**
+
+- **NFR-3 (Retry Logic)** is explicitly deferred to Phase 2 per MVP scope limitation: "No retry logic for failed evals in MVP" (see MVP Scope Limitations below). This NFR will be addressed in Epic 4 (Reliability & Performance) during Phase 2.
+
+- **NFR-5 (<1% Failure Rate)** is an ambitious target that may not be achievable in MVP without retry logic and checkpointing. Consider this a Phase 2 target. The MVP will focus on stability and correctness; failure rate optimization will be addressed in Epic 4 (Reliability & Performance) during Phase 2.
+
 ### Additional Requirements
 
 **Technical Constraints:**
@@ -93,7 +99,7 @@ This document provides the complete epic and story breakdown for opencode-custom
 - Acceptance of different valid agent implementation approaches
 
 **Architecture Note:**
-The Architecture document appears incomplete (only contains frontmatter). Technical implementation details such as API contracts, data models, and infrastructure requirements were not available for extraction.
+The comprehensive architecture document is located at `docs/architecture.md` (619 lines, complete and detailed). The file `planning_artifacts/architecture.md` is a workflow output artifact (431 bytes, frontmatter only) and should not be used for implementation decisions.
 
 ### FR Coverage Map
 

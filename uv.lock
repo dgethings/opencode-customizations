@@ -85,6 +85,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cloudpickle"
+version = "3.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/fb/576f067976d320f5f0114a8d9fa1215425441bb35627b1993e5afd8111e5/cloudpickle-3.1.2.tar.gz", hash = "sha256:7fda9eb655c9c230dab534f1983763de5835249750e85fbcef43aaa30a9a2414", size = 22330, upload-time = "2025-11-03T09:25:26.604Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl", hash = "sha256:9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a", size = 22228, upload-time = "2025-11-03T09:25:25.534Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -186,6 +195,18 @@ toml = [
 ]
 
 [[package]]
+name = "decopatch"
+version = "1.4.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "makefun" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/4c/8ca1f193428cbc4d63d0f07db9b8bd96be2db8ee5deefa93e7e8a28f2812/decopatch-1.4.10.tar.gz", hash = "sha256:957f49c93f4150182c23f8fb51d13bb3213e0f17a79e09c8cca7057598b55720", size = 69538, upload-time = "2022-03-01T08:57:21.79Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/fa/8e4a51e1afda8d4bd73d784bfe4a60cfdeeced9bea419eff5c271180377e/decopatch-1.4.10-py2.py3-none-any.whl", hash = "sha256:e151f7f93de2b1b3fd3f3272dcc7cefd1a69f68ec1c2d8e288ecd9deb36dc5f7", size = 18015, upload-time = "2022-03-01T08:57:20.676Z" },
+]
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -213,6 +234,15 @@ wheels = [
 ]
 
 [[package]]
+name = "makefun"
+version = "1.16.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/cf/6780ab8bc3b84a1cce3e4400aed3d64b6db7d5e227a2f75b6ded5674701a/makefun-1.16.0.tar.gz", hash = "sha256:e14601831570bff1f6d7e68828bcd30d2f5856f24bad5de0ccb22921ceebc947", size = 73565, upload-time = "2025-05-09T15:00:42.313Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/c0/4bc973defd1270b89ccaae04cef0d5fa3ea85b59b108ad2c08aeea9afb76/makefun-1.16.0-py2.py3-none-any.whl", hash = "sha256:43baa4c3e7ae2b17de9ceac20b669e9a67ceeadff31581007cca20a07bbe42c4", size = 22923, upload-time = "2025-05-09T15:00:41.042Z" },
+]
+
+[[package]]
 name = "opencode-customizations"
 version = "0.1.0"
 source = { editable = "." }
@@ -225,6 +255,7 @@ dependencies = [
 test = [
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "pytest-evals" },
     { name = "pytest-mock" },
     { name = "requests-mock" },
 ]
@@ -233,6 +264,7 @@ test = [
 requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0.0" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.0.0" },
+    { name = "pytest-evals", marker = "extra == 'test'", specifier = ">=0.3.4" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.12.0" },
     { name = "requests", specifier = ">=2.31.0" },
     { name = "requests-mock", marker = "extra == 'test'", specifier = ">=1.12.0" },
@@ -298,6 +330,35 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-evals"
+version = "0.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cloudpickle" },
+    { name = "pytest" },
+    { name = "pytest-harvest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a6/7c/67f6e792d3dff4593af0c2f9e8b56be54a6dea4bb37dc91cba53feefc05f/pytest_evals-0.3.4.tar.gz", hash = "sha256:a209d1f4d0993c3b05a2348042a5c81bf200e7c28d9d559fe629293f2f664552", size = 225846, upload-time = "2025-02-02T21:26:40.186Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/f8/d1e0cf1494fc6401e335728b3dc3bc3fd90622de7cdc489992e0742b1ea4/pytest_evals-0.3.4-py3-none-any.whl", hash = "sha256:81e30baffe8879adfb80ec9d4dddf1c92831901b4bfc756d8de3e1d567360c1a", size = 11556, upload-time = "2025-02-02T21:26:38.838Z" },
+]
+
+[[package]]
+name = "pytest-harvest"
+version = "1.10.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "decopatch" },
+    { name = "makefun" },
+    { name = "packaging" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a5/cc/5750e19285f81070adbc513b18f1f31a9202aa944cf8b7f8ce27082095d4/pytest-harvest-1.10.5.tar.gz", hash = "sha256:27cfa4cf1f2e43d1e7749c282e0fe72d30e90e89bede6b30a59b626848c7d418", size = 81064, upload-time = "2024-03-16T00:57:35.88Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/a3/d6c4da04ce6b63ad8b09f956a4dc3741a00fcb74c4a9079a5c014fcb5fb2/pytest_harvest-1.10.5-py2.py3-none-any.whl", hash = "sha256:44a0c53dd33449ec7c0473ff2edb4887d4f105bb2d6faeb0f3784e2a15cae55c", size = 23651, upload-time = "2024-03-16T00:57:33.59Z" },
+]
+
+[[package]]
 name = "pytest-mock"
 version = "3.15.1"
 source = { registry = "https://pypi.org/simple" }
@@ -334,6 +395,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/92/32/587625f91f9a0a3d84688bf9cfc4b2480a7e8ec327cefd0ff2ac891fd2cf/requests-mock-1.12.1.tar.gz", hash = "sha256:e9e12e333b525156e82a3c852f22016b9158220d2f47454de9cae8a77d371401", size = 60901, upload-time = "2024-03-29T03:54:29.446Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/97/ec/889fbc557727da0c34a33850950310240f2040f3b1955175fdb2b36a8910/requests_mock-1.12.1-py2.py3-none-any.whl", hash = "sha256:b1e37054004cdd5e56c84454cc7df12b25f90f382159087f4b6915aaeef39563", size = 27695, upload-time = "2024-03-29T03:54:27.64Z" },
+]
+
+[[package]]
+name = "six"
+version = "1.17.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
 ]
 
 [[package]]
