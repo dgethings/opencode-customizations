@@ -8,7 +8,7 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import date
 
 import requests
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -29,12 +29,12 @@ def extract_video_id(url):
     raise ValueError(f"Could not extract video ID from URL: {url}")
 
 
-def get_video_metadata(video_id, api_key):
+def get_video_metadata(id: str, api_key: str):
     """Fetch video title, description, and tags from YouTube Data API."""
     url = "https://www.googleapis.com/youtube/v3/videos"
     params = {
         "part": "snippet",
-        "id": video_id,
+        "id": id,
         "key": api_key,
         "fields": "items(snippet(title,description,tags))",
     }
@@ -45,9 +45,14 @@ def get_video_metadata(video_id, api_key):
     data = response.json()
 
     if not data.get("items"):
-        raise ValueError(f"Video not found: {video_id}")
+        raise ValueError(f"Video not found: {id}")
 
-    snippet = data["items"][0]["snippet"]
+    try:
+        snippet = data["items"][0]["snippet"]
+    except (KeyError, IndexError):
+        raise ValueError(
+            f"Video {id} did not contain the `snippet` metadata field. Only contained the following: {data}"
+        )
     return {
         "title": snippet.get("title", ""),
         "description": snippet.get("description", ""),
@@ -121,6 +126,7 @@ def sanitize_filename(title):
     for char in invalid_chars:
         title = title.replace(char, "")
     title = title.strip()
+    title = title.rstrip(".")
 
     if len(title) > 100:
         title = title[:97] + "..."
@@ -135,7 +141,7 @@ def create_obsidian_note(
     title = metadata["title"]
     description = metadata["description"]
     youtube_tags = metadata.get("tags", [])
-    today = datetime.today()
+    today = date.today().isoformat()
 
     tags = generate_tags(title, description, transcript, youtube_tags)
 
@@ -173,18 +179,15 @@ created: {today}
 
 
 def main():
+    __import__("pdb").set_trace()
     if len(sys.argv) < 2:
-        print(
-            "Usage: python get_youtube_data.py <youtube_url> "
-            "[user_summary] [user_comments]"
-        )
+        print("Usage: python get_youtube_data.py <youtube_url> [user_comments]")
         print("Environment variables needed:")
         print("  YOUTUBE_API_KEY - Your YouTube Data API v3 key")
-        print("  OBSIDIAN_VAULT_PATH - Path to your Obsidian vault")
+        print("  VAULT_PATH - Path to your Obsidian vault")
         sys.exit(1)
 
     youtube_url = sys.argv[1]
-    user_summary = sys.argv[2] if len(sys.argv) > 2 else ""
     user_comments = sys.argv[3] if len(sys.argv) > 3 else ""
 
     api_key = os.environ.get("YOUTUBE_API_KEY")
@@ -192,9 +195,9 @@ def main():
         print("Error: YOUTUBE_API_KEY environment variable not set")
         sys.exit(1)
 
-    vault_path = os.environ.get("VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
+    vault_path = os.environ.get("VAULT_PATH")
     if not vault_path:
-        print("Error: VAULT_PATH or OBSIDIAN_VAULT_PATH environment variable not set")
+        print("Error: VAULT_PATH environment variable not set")
         sys.exit(1)
 
     try:
@@ -211,7 +214,7 @@ def main():
 
         print("Generating Obsidian note...")
         note_content, filename = create_obsidian_note(
-            video_id, youtube_url, metadata, transcript, user_summary, user_comments
+            video_id, youtube_url, metadata, transcript, user_comments
         )
 
         output_path = os.path.join(vault_path, f"{filename}.md")
