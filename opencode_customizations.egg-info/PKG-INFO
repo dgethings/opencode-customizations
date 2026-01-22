@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: opencode-customizations
+Version: 0.1.0
+Summary: A collection of Opencode agents, skills, tools and commands to customise Opencode's capabilities and behaviour
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: youtube-transcript-api>=0.6.0
+
+# Opencode Customizations
+
+A collection of customizations for [Opencode](https://opencode.ai/)
+
+Documentation for how Opencode can be customized can be found [here](https://opencode.ai/docs/).
+
+This project is not affiliated with Opencode in any way.

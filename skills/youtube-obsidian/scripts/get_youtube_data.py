@@ -1,23 +1,17 @@
-#!/usr/bin/env python3
+# // script
+# dependencies = [
+#     "youtube-transcript-api>=1.2.3"
+#     "requests>=2.32.*"
+# ]
+# //
 import json
 import os
 import re
 import sys
+from datetime import datetime
 
-try:
-    import requests
-except ImportError:
-    print("Error: requests module not found. Install with: pip install requests")
-    sys.exit(1)
-
-try:
-    from youtube_transcript_api import YouTubeTranscriptApi
-except ImportError:
-    print(
-        "Error: youtube-transcript-api not found. "
-        "Install with: pip install youtube-transcript-api"
-    )
-    sys.exit(1)
+import requests
+from youtube_transcript_api import YouTubeTranscriptApi
 
 
 def extract_video_id(url):
@@ -141,6 +135,7 @@ def create_obsidian_note(
     title = metadata["title"]
     description = metadata["description"]
     youtube_tags = metadata.get("tags", [])
+    today = datetime.today()
 
     tags = generate_tags(title, description, transcript, youtube_tags)
 
@@ -149,6 +144,7 @@ title: {title}
 youtube_id: {video_id}
 tags: {json.dumps(tags)}
 youtube_url: {url}
+created: {today}
 ---
 
 """

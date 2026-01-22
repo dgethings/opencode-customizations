@@ -1,5 +1,5 @@
 ---
-name: youtube-obsidian
+name: capture-youtube-insight
 description: "Extract YouTube video metadata and transcripts to create Obsidian markdown notes. Use for creating structured notes from YouTube videos, saving video transcripts with metadata for future reference, and generating tagged notes from YouTube content including title, description, and transcript. Requires YOUTUBE_API_KEY and VAULT_PATH environment variables."
 ---
 
@@ -82,7 +82,7 @@ Tags are auto-generated from:
 2. Capitalized words in title, description, transcript
 3. Common technical terms found in content
 
-Maximum 15 tags per note.
+Maximum 5 tags per note.
 
 ## Error Handling
 
@@ -100,43 +100,3 @@ The script creates the Obsidian note with all data, but does NOT auto-summarize 
 
 After the note is created, you may want to ask Claude to summarize the transcript content and update the note.
 
-## Testing
-
-### Running Tests
-
-Run the test suite:
-
-```bash
-uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py -v
-```
-
-With coverage:
-
-```bash
-uv run pytest skills/youtube-obsidian/scripts/test_get_youtube_data.py --cov=skills/youtube-obsidian/scripts --cov-report=html
-```
-
-### Running Evaluation Script
-
-Run the evaluation script:
-
-```bash
-uv run evals/eval_youtube_obsidian.py
-```
-
-### Capturing Test Data
-
-To capture real API data for testing:
-
-```bash
-export YOUTUBE_API_KEY="your-api-key"
-uv run scripts/capture_test_data.py "https://www.youtube.com/watch?v=VIDEO_ID"
-```
-
-### Test Coverage
-
-The test suite includes:
-- 30 tests (26 unit tests + 4 main function tests)
-- 91.30% code coverage
-- Tests for URL parsing, filename sanitization, tag generation, note creation, metadata fetching, and transcript handling
-- Integration test for real YouTube API (requires YOUTUBE_API_KEY)

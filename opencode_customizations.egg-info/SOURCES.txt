@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+opencode_customizations.egg-info/PKG-INFO
+opencode_customizations.egg-info/SOURCES.txt
+opencode_customizations.egg-info/dependency_links.txt
+opencode_customizations.egg-info/requires.txt
+opencode_customizations.egg-info/top_level.txt
+skills/youtube-obsidian/scripts/get_youtube_data.py
