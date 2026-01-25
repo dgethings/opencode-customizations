@@ -41,3 +41,10 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["skills"]
+addopts = "--cov=scripts --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+omit = ["test_*.py"]
