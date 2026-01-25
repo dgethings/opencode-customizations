@@ -9,21 +9,7 @@ Extract YouTube video content and create structured Obsidian notes with frontmat
 
 ## Prerequisites
 
-Set these environment variables:
-
-```bash
-export YOUTUBE_API_KEY="your-youtube-data-api-v3-key"
-export VAULT_PATH="/path/to/your/obsidian/vault"
-```
-
-**YouTube API Key**: Get from https://console.cloud.google.com/
-- Create project, enable YouTube Data API v3
-- Create API key in Credentials section
-
-**Python Dependencies**:
-```bash
-pip install requests youtube-transcript-api
-```
+You maybe given some comments from the user about the video. This will be given with the YouTube video ID or URL. If the user does give comments then save this as `user_comments` for later steps.
 
 ## Workflow
 
@@ -32,26 +18,23 @@ pip install requests youtube-transcript-api
 Run the script to fetch all video data:
 
 ```bash
-uv run scripts/get_youtube_data.py <youtube_url> "<user_summary>" "<user_comments>"
+uv run scripts/yt.py metadata <youtube_url>
 ```
 
 **Parameters**:
 - `youtube_url`: Full YouTube URL or video ID
-- `user_summary` (optional): Your summary of the video
-- `user_comments` (optional): Your personal notes/comments
 
 **Example**:
 ```bash
-uv run scripts/get_youtube_data.py "https://www.youtube.com/watch?v=dQw4w9WgXcQ" "A classic music video" "Remember this from 1987"
+uv run scripts/yt.py metadata "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
 ### 2. Script Execution
 
 The script automatically:
 - Extracts video ID from URL
-- Fetches title, description, and tags via YouTube Data API
+- Fetches title and description via YouTube Data API
 - Retrieves full transcript using youtube-transcript-api
-- Auto-generates relevant tags from content
 - Creates Obsidian markdown file with proper frontmatter
 - Saves note to your vault
 
