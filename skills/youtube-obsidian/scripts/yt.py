@@ -1,6 +1,6 @@
 import os
 from functools import reduce
-from typing import Annotated
+from typing import Annotated, Literal
 
 import requests
 from pydantic import AnyUrl, BaseModel
@@ -23,8 +23,20 @@ class Snippet(BaseModel):
     description: str
 
 
+YTDataApiURL = "https://www.googleapis.com/youtube/v3/videos"
+
+
 # helper functions
 def fetch_transcript(id: str, langs=["en"]) -> str:
+    """Fetch and concatenate transcript segments for a YouTube video.
+
+    Args:
+        id: YouTube video ID
+        langs: List of language codes to fetch transcript in (default: ["en"])
+
+    Returns:
+        Concatenated transcript text as a single string
+    """
     api = YouTubeTranscriptApi()
     try:
         fetched = api.fetch(id, langs)
@@ -40,14 +52,18 @@ def fetch_transcript(id: str, langs=["en"]) -> str:
 
 
 def parse_yt_url(url: str) -> AnyUrl:
+    """Validate and parse a YouTube URL using Pydantic's AnyUrl type.
+
+    Args:
+        url: YouTube video URL string
+
+    Returns:
+        Validated AnyUrl object for the YouTube video
+    """
     return AnyUrl(url)
 
 
-def yt_data_api(
-    id: str,
-    api_key: str | None = None,
-    url: str = "https://www.googleapis.com/youtube/v3/videos",
-) -> Snippet:
+def yt_data_api(id: str, url=YTDataApiURL, api_key: str | None = None) -> Snippet:
     """Get video metadata using YT data API."""
     api_key = api_key or os.environ.get("YOUTUBE_API_KEY")
     if not api_key:
@@ -76,7 +92,7 @@ def get_metadata(id: str) -> str:
     return yt_data_api(id).model_dump_json()
 
 
-# argument definitions
+# cli argument definitions
 ID = Annotated[str, Argument(help="Youtube video ID")]
 LANG = Annotated[str, Option(help="language you want the transcript in")]
 URL = Annotated[AnyUrl, Argument(help="Youtube URL", parser=parse_yt_url)]
