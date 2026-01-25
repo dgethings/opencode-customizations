@@ -5,6 +5,8 @@ description = "A collection of Opencode agents, skills, tools and commands to cu
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "pydantic>=2.12.5",
+    "requests>=2.32.5",
     "typer>=0.21.1",
     "youtube-transcript-api>=0.6.0",
 ]
@@ -21,8 +23,11 @@ line-length = 88
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP"]
+select = ["C90", "E", "F", "I", "N", "W", "UP"]
 ignore = []
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.ruff.format]
 indent-style = "space"
