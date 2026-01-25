@@ -5,6 +5,7 @@ description = "A collection of Opencode agents, skills, tools and commands to cu
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "typer>=0.21.1",
     "youtube-transcript-api>=0.6.0",
 ]
 
@@ -29,3 +30,9 @@ line-ending = "auto"
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+]
